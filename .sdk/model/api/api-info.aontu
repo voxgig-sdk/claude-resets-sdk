@@ -1,0 +1,25 @@
+# API Information
+
+
+main: {
+  kit: {
+    info: {
+      auth: false
+      description: `Public read-only data from claude-resets.com, which tracks Claude Code usage-limit reset announcements by @ClaudeDevs and Claude Code team members, plus limit-policy changes, alongside OpenAI Codex resets taken from codex-resets.com. No key. Data is CC BY 4.0 with credit to claude-resets.com; quoted post text belongs to its author.
+
+Sources: https://claude-resets.com/llms.txt (which documents the dataset contract), with all three JSON endpoints probed live on 2026-10-23.
+
+Not modelled: the RSS feeds (/rss.xml, /rss/resets.xml), the iCalendar feed (/calendar.ics), the monthly CSV, the MCP server (/mcp) and /api/statusline (text/plain key=value lines), none of which is JSON. Observed differences between the live catalog and the static dataset: the live catalog adds \`meta\` and a \`verification\` field on every event, gives every Codex event a \`resetType\` (regular or banked), and may list upstream or provisional events the static file does not yet hold (65 Codex events live vs 59 static on the probe date). Unverified: events with verification \`provisional\` (none existed on the probe date), and non-empty provisional id lists.`
+      servers: [
+        {
+          url: "https://claude-resets.com"
+        }
+      ]
+      summary: "Public read-only data from claude-resets.com, which tracks Claude Code usage-limit reset announcements by @ClaudeDevs and Claude Code team members, plus limit-policy changes, alongside OpenAI Codex resets taken from codex-resets.com."
+      title: "Claude Resets API"
+      version: "1.0.0"
+      website: "https://claude-resets.com/llms.txt"
+    }
+  }
+}
+

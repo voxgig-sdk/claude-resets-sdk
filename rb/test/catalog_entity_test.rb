@@ -1,0 +1,114 @@
+# Catalog entity test
+
+require "minitest/autorun"
+require "json"
+require_relative "../ClaudeResets_sdk"
+require_relative "runner"
+
+class CatalogEntityTest < Minitest::Test
+  # main.kit.test.live.strict is true (the default is true): a live
+  # request that fails, or a live test missing an input it needs,
+  # fails the test.
+  # An account with no record for a test to read skips it either way.
+  LIVE_STRICT = true
+
+  def test_create_instance
+    testsdk = ClaudeResetsSDK.test(nil, nil)
+    ent = testsdk.Catalog(nil)
+    assert !ent.nil?
+  end
+
+  def test_basic_flow
+    setup = catalog_basic_setup(nil)
+    # Per-op sdk-test-control.json skip.
+    _live = setup[:live] || false
+    ["load"].each do |_op|
+      _should_skip, _reason = Runner.is_control_skipped("entityOp", "catalog." + _op, _live ? "live" : "unit")
+      if _should_skip
+        skip(_reason || "skipped via sdk-test-control.json")
+        return
+      end
+    end
+    client = setup[:client]
+
+    # Bootstrap entity data from existing test data.
+    catalog_ref01_data_raw = Vs.items(Helpers.to_map(
+      Vs.getpath(setup[:data], "existing.catalog")))
+    catalog_ref01_data = nil
+    if catalog_ref01_data_raw.length > 0
+      catalog_ref01_data = Helpers.to_map(catalog_ref01_data_raw[0][1])
+    end
+
+    # LOAD
+    catalog_ref01_ent = client.Catalog(nil)
+    catalog_ref01_match_dt0 = {}
+    catalog_ref01_data_dt0_loaded = catalog_ref01_ent.load(catalog_ref01_match_dt0, nil)
+    assert !catalog_ref01_data_dt0_loaded.nil?
+
+  end
+end
+
+def catalog_basic_setup(extra)
+  Runner.load_env_local
+
+  entity_data_file = File.join(__dir__, "..", "..", ".sdk", "test", "entity", "catalog", "CatalogTestData.json")
+  entity_data_source = File.read(entity_data_file, encoding: "UTF-8")
+  entity_data = JSON.parse(entity_data_source)
+
+  options = {}
+  options["entity"] = entity_data["existing"]
+
+  client = ClaudeResetsSDK.test(options, extra)
+
+  # Generate idmap via transform.
+  idmap = Vs.transform(
+    ["catalog01", "catalog02", "catalog03"],
+    {
+      "`$PACK`" => ["", {
+        "`$KEY`" => "`$COPY`",
+        "`$VAL`" => ["`$FORMAT`", "upper", "`$COPY`"],
+      }],
+    }
+  )
+
+  # Whether *_ENTID supplied the idmap, read before env_override consumes
+  # it: without it, the ids a live flow binds are the fixture's synthetic ones.
+  entid_env_raw = ENV["CLAUDE_RESETS_TEST_CATALOG_ENTID"]
+  idmap_overridden = !entid_env_raw.nil? && entid_env_raw.strip.start_with?("{")
+
+  env = Runner.env_override({
+    "CLAUDE_RESETS_TEST_CATALOG_ENTID" => idmap,
+    "CLAUDE_RESETS_TEST_LIVE" => "FALSE",
+    "CLAUDE_RESETS_TEST_EXPLAIN" => "FALSE",
+  })
+
+  idmap_resolved = Helpers.to_map(
+    env["CLAUDE_RESETS_TEST_CATALOG_ENTID"])
+  if idmap_resolved.nil?
+    idmap_resolved = Helpers.to_map(idmap)
+  end
+
+  if env["CLAUDE_RESETS_TEST_LIVE"] == "TRUE"
+    merged_opts = Vs.merge([
+      # FIRST, so the generated fields below win: sdk-test-control.json's
+      # test.client.options adds to the live client, it does not redirect it.
+      Runner.live_client_options,
+      {
+      },
+      extra || {},
+    ])
+    client = ClaudeResetsSDK.new(Helpers.to_map(merged_opts))
+  end
+
+  live = env["CLAUDE_RESETS_TEST_LIVE"] == "TRUE"
+  {
+    client: client,
+    data: entity_data,
+    idmap: idmap_resolved,
+    env: env,
+    explain: env["CLAUDE_RESETS_TEST_EXPLAIN"] == "TRUE",
+    live: live,
+    synthetic_only: live && !idmap_overridden,
+    now: (Time.now.to_f * 1000).to_i,
+  }
+end

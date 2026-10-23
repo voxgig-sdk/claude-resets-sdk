@@ -1,0 +1,44 @@
+{
+  "existing": {
+    "summary": {
+      "SUMMARY00": {
+        "date": "s32",
+        "id": "SUMMARY00",
+        "scope": "s34",
+        "url": "s35",
+        "usableUntil": "s36"
+      },
+      "SUMMARY01": {
+        "date": "s64",
+        "id": "SUMMARY01",
+        "scope": "s66",
+        "url": "s67",
+        "usableUntil": "s68"
+      },
+      "SUMMARY02": {
+        "date": "s96",
+        "id": "SUMMARY02",
+        "scope": "s98",
+        "url": "s99",
+        "usableUntil": "s9a"
+      }
+    }
+  },
+  "new": {
+    "summary": {
+      "summary_ref01": {
+        "date": "sc8",
+        "scope": "sca",
+        "url": "scb",
+        "usableUntil": "scc"
+      }
+    }
+  },
+  "requests": {
+    "GET /data/summary.json": {
+      "provenance": "operation-contract",
+      "version": 2,
+      "source": "openapi3"
+    }
+  }
+}

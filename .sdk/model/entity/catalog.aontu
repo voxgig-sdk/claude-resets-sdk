@@ -1,0 +1,60 @@
+# Entity: catalog
+
+main: kit: entity: catalog: {
+
+  alias: field: {}
+
+  fields: {
+    meta: {
+      h: "Meta"
+      n: "meta"
+      r: false
+      sh: "Runtime metadata."
+      t: "`$OBJECT`"
+    }
+    providers: {
+      h: "Providers"
+      n: "providers"
+      r: true
+      sh: "Event history per provider."
+      t: "`$OBJECT`"
+    }
+  }
+
+  name: "catalog"
+  op: {
+    load: {
+      name: "load"
+      points: [
+        {
+          co: {
+            id: "GET /api/resets"
+            source: "openapi3"
+            version: 2
+          }
+          m: "GET"
+          o: "/api/resets"
+          rs: {
+            kind: "json"
+            media: "application/json"
+          }
+          s: [
+            {
+              lit: "api"
+            }
+            {
+              lit: "resets"
+            }
+          ]
+          t: {
+            req: "`reqdata`"
+            res: "`body`"
+          }
+        }
+      ]
+    }
+  }
+
+
+
+}

@@ -1,0 +1,58 @@
+# Entity: history
+
+main: kit: entity: history: {
+
+  alias: field: {}
+
+  fields: {
+    claude: {
+      h: "Claude"
+      n: "claude"
+      r: true
+      t: "`$OBJECT`"
+    }
+    codex: {
+      h: "Codex"
+      n: "codex"
+      r: true
+      t: "`$OBJECT`"
+    }
+  }
+
+  name: "history"
+  op: {
+    load: {
+      name: "load"
+      points: [
+        {
+          co: {
+            id: "GET /data/resets.json"
+            source: "openapi3"
+            version: 2
+          }
+          m: "GET"
+          o: "/data/resets.json"
+          rs: {
+            kind: "json"
+            media: "application/json"
+          }
+          s: [
+            {
+              lit: "data"
+            }
+            {
+              lit: "resets.json"
+            }
+          ]
+          t: {
+            req: "`reqdata`"
+            res: "`body.providers`"
+          }
+        }
+      ]
+    }
+  }
+
+
+
+}

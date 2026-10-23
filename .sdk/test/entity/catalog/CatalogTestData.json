@@ -1,0 +1,36 @@
+{
+  "existing": {
+    "catalog": {
+      "CATALOG00": {
+        "meta": {},
+        "providers": {},
+        "id": "CATALOG00"
+      },
+      "CATALOG01": {
+        "meta": {},
+        "providers": {},
+        "id": "CATALOG01"
+      },
+      "CATALOG02": {
+        "meta": {},
+        "providers": {},
+        "id": "CATALOG02"
+      }
+    }
+  },
+  "new": {
+    "catalog": {
+      "catalog_ref01": {
+        "meta": {},
+        "providers": {}
+      }
+    }
+  },
+  "requests": {
+    "GET /api/resets": {
+      "provenance": "operation-contract",
+      "version": 2,
+      "source": "openapi3"
+    }
+  }
+}

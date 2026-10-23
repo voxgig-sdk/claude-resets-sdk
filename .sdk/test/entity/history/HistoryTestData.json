@@ -1,0 +1,36 @@
+{
+  "existing": {
+    "history": {
+      "HISTORY00": {
+        "claude": {},
+        "codex": {},
+        "id": "HISTORY00"
+      },
+      "HISTORY01": {
+        "claude": {},
+        "codex": {},
+        "id": "HISTORY01"
+      },
+      "HISTORY02": {
+        "claude": {},
+        "codex": {},
+        "id": "HISTORY02"
+      }
+    }
+  },
+  "new": {
+    "history": {
+      "history_ref01": {
+        "claude": {},
+        "codex": {}
+      }
+    }
+  },
+  "requests": {
+    "GET /data/resets.json": {
+      "provenance": "operation-contract",
+      "version": 2,
+      "source": "openapi3"
+    }
+  }
+}

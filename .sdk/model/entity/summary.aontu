@@ -1,0 +1,84 @@
+# Entity: summary
+
+main: kit: entity: summary: {
+
+  alias: field: {}
+
+  fields: {
+    date: {
+      fo: "date-time"
+      h: "Date"
+      n: "date"
+      r: true
+      t: "`$STRING`"
+    }
+    id: {
+      h: "Id"
+      n: "id"
+      r: true
+      t: "`$STRING`"
+    }
+    scope: {
+      h: "Scope"
+      n: "scope"
+      r: false
+      t: "`$STRING`"
+    }
+    url: {
+      h: "Url"
+      n: "url"
+      r: false
+      t: "`$STRING`"
+    }
+    usableUntil: {
+      fo: "date-time"
+      h: "Usable Until"
+      n: "usableUntil"
+      r: false
+      sh: "Deadline to apply it, or null when none was set."
+      t: "`$STRING`"
+    }
+  }
+
+  id: {
+    field: "id"
+    name: "id"
+  }
+
+  name: "summary"
+  op: {
+    list: {
+      name: "list"
+      points: [
+        {
+          co: {
+            id: "GET /data/summary.json"
+            source: "openapi3"
+            version: 2
+          }
+          m: "GET"
+          o: "/data/summary.json"
+          rs: {
+            kind: "json"
+            media: "application/json"
+          }
+          s: [
+            {
+              lit: "data"
+            }
+            {
+              lit: "summary.json"
+            }
+          ]
+          t: {
+            req: "`reqdata`"
+            res: "`body`"
+          }
+        }
+      ]
+    }
+  }
+
+
+
+}

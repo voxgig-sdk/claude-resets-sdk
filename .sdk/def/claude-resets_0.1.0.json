@@ -1,0 +1,419 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Claude Resets API",
+    "version": "1.0.0",
+    "description": "Public read-only data from claude-resets.com, which tracks Claude Code usage-limit reset announcements by @ClaudeDevs and Claude Code team members, plus limit-policy changes, alongside OpenAI Codex resets taken from codex-resets.com. No key. Data is CC BY 4.0 with credit to claude-resets.com; quoted post text belongs to its author.\n\nSources: https://claude-resets.com/llms.txt (which documents the dataset contract), with all three JSON endpoints probed live on 2026-10-23.\n\nNot modelled: the RSS feeds (/rss.xml, /rss/resets.xml), the iCalendar feed (/calendar.ics), the monthly CSV, the MCP server (/mcp) and /api/statusline (text/plain key=value lines), none of which is JSON. Observed differences between the live catalog and the static dataset: the live catalog adds `meta` and a `verification` field on every event, gives every Codex event a `resetType` (regular or banked), and may list upstream or provisional events the static file does not yet hold (65 Codex events live vs 59 static on the probe date). Unverified: events with verification `provisional` (none existed on the probe date), and non-empty provisional id lists."
+  },
+  "externalDocs": {
+    "description": "claude-resets.com llms.txt",
+    "url": "https://claude-resets.com/llms.txt"
+  },
+  "servers": [
+    {
+      "url": "https://claude-resets.com"
+    }
+  ],
+  "paths": {
+    "/api/resets": {
+      "get": {
+        "operationId": "getCatalog",
+        "summary": "Live reset catalog",
+        "description": "The provider catalog with runtime metadata: every catalogued event is `curated`; events detected but not yet catalogued are `provisional`, and Codex events listed upstream but not yet catalogued are `upstream`.",
+        "responses": {
+          "200": {
+            "description": "The live catalog.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Catalog"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/data/resets.json": {
+      "get": {
+        "operationId": "getHistory",
+        "summary": "Full event history (static dataset)",
+        "description": "The curated dataset of every tracked reset and policy change for Claude and Codex, rebuilt with the site. Events carry no `verification` field.",
+        "responses": {
+          "200": {
+            "description": "The full dataset.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/History"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/data/summary.json": {
+      "get": {
+        "operationId": "getSummary",
+        "summary": "Claude reset summary",
+        "description": "Short machine summary of the Claude side only. It omits days-since-last-reset so the file stays stable between rebuilds: compute that from `lastResetAt`.",
+        "responses": {
+          "200": {
+            "description": "The summary.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Summary"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Catalog": {
+        "type": "object",
+        "description": "The live provider catalog.",
+        "properties": {
+          "providers": {
+            "type": "object",
+            "description": "Event history per provider.",
+            "properties": {
+              "claude": {
+                "$ref": "#/components/schemas/Provider"
+              },
+              "codex": {
+                "$ref": "#/components/schemas/Provider"
+              }
+            },
+            "required": [
+              "claude",
+              "codex"
+            ]
+          },
+          "meta": {
+            "type": "object",
+            "description": "Runtime metadata.",
+            "properties": {
+              "detector": {
+                "type": "object",
+                "description": "Whether live detection of new Claude announcements is working.",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "description": "fresh, starting, offline, degraded or stale.",
+                    "example": "fresh"
+                  }
+                }
+              },
+              "codexSync": {
+                "type": "object",
+                "description": "Whether the sync from codex-resets.com is working.",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "description": "fresh, starting, offline, degraded or stale.",
+                    "example": "fresh"
+                  }
+                }
+              },
+              "provisionalEventIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Ids of provisional Claude resets."
+              },
+              "provisionalPolicyIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Ids of provisional Claude limit changes."
+              }
+            }
+          }
+        },
+        "required": [
+          "providers"
+        ]
+      },
+      "History": {
+        "type": "object",
+        "description": "The static dataset of every tracked event.",
+        "properties": {
+          "providers": {
+            "type": "object",
+            "description": "Event history per provider.",
+            "properties": {
+              "claude": {
+                "$ref": "#/components/schemas/Provider"
+              },
+              "codex": {
+                "$ref": "#/components/schemas/Provider"
+              }
+            },
+            "required": [
+              "claude",
+              "codex"
+            ]
+          }
+        },
+        "required": [
+          "providers"
+        ]
+      },
+      "Provider": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Claude"
+          },
+          "product": {
+            "type": "string",
+            "example": "Claude Code"
+          },
+          "account": {
+            "type": "string",
+            "description": "Primary X account the announcements come from.",
+            "example": "ClaudeDevs"
+          },
+          "accountUrl": {
+            "type": "string",
+            "example": "https://x.com/ClaudeDevs"
+          },
+          "note": {
+            "type": "string",
+            "description": "Provenance note (Codex only)."
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResetEvent"
+            },
+            "description": "Events, oldest first."
+          }
+        },
+        "required": [
+          "name",
+          "events"
+        ]
+      },
+      "ResetEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "X status id of the announcement.",
+            "example": "2044868953206612154"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC timestamp, decoded from the X status id snowflake."
+          },
+          "kind": {
+            "type": "string",
+            "description": "`reset` (counters flushed; counted) or `policy` (ceiling moved, nothing flushed; archive only).",
+            "example": "reset"
+          },
+          "resetType": {
+            "type": "string",
+            "description": "`banked` for a reset users apply themselves; `regular` on live Codex events; absent otherwise (a regular reset).",
+            "example": "banked"
+          },
+          "usableUntil": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Banked resets only, when a deadline was set: the last moment it can be applied (UTC)."
+          },
+          "account": {
+            "type": "string",
+            "description": "Source X account, when it differs from the provider's primary account."
+          },
+          "scope": {
+            "type": "string",
+            "description": "Who was affected, when known.",
+            "example": "all"
+          },
+          "note": {
+            "type": "string",
+            "description": "Summary of the announcement; verify against `url`."
+          },
+          "url": {
+            "type": "string",
+            "description": "Link to the announcement."
+          },
+          "verification": {
+            "type": "string",
+            "description": "Live catalog only: curated, provisional or upstream.",
+            "example": "curated"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "kind"
+        ]
+      },
+      "Summary": {
+        "type": "object",
+        "description": "Short summary of the Claude side.",
+        "properties": {
+          "site": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "example": "claude-resets.com"
+          },
+          "product": {
+            "type": "string",
+            "example": "Claude Code"
+          },
+          "account": {
+            "type": "string",
+            "example": "ClaudeDevs"
+          },
+          "accountUrl": {
+            "type": "string"
+          },
+          "lastResetAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastResetUrl": {
+            "type": "string"
+          },
+          "lastResetAccount": {
+            "type": "string"
+          },
+          "lastResetScope": {
+            "type": "string"
+          },
+          "lastResetType": {
+            "type": "string",
+            "description": "e.g. banked; absent or regular for a plain reset (unverified)."
+          },
+          "lastResetUsableUntil": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastResetForAllUsersAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastResetForAllUsersUrl": {
+            "type": "string"
+          },
+          "resetCount": {
+            "type": "integer",
+            "example": 14
+          },
+          "bankedResetCount": {
+            "type": "integer"
+          },
+          "bankedResets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BankedReset"
+            },
+            "description": "Every banked announcement. Announcement history, not a user's unused balance."
+          },
+          "policyChangeCount": {
+            "type": "integer"
+          },
+          "meanGapDays": {
+            "type": "number",
+            "example": 12.2
+          },
+          "longestGapDays": {
+            "type": "number",
+            "example": 47.6
+          },
+          "firstResetAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "datasetUrl": {
+            "type": "string"
+          },
+          "liveDatasetUrl": {
+            "type": "string"
+          },
+          "resetRssUrl": {
+            "type": "string"
+          },
+          "announcementRssUrl": {
+            "type": "string"
+          },
+          "llmsTxtUrl": {
+            "type": "string"
+          },
+          "calendarUrl": {
+            "type": "string"
+          },
+          "mcpUrl": {
+            "type": "string"
+          },
+          "statuslineUrl": {
+            "type": "string"
+          },
+          "definitions": {
+            "type": "object",
+            "properties": {
+              "reset": {
+                "type": "string"
+              },
+              "bankedReset": {
+                "type": "string"
+              },
+              "policy": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "lastResetAt",
+          "resetCount"
+        ]
+      },
+      "BankedReset": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "scope": {
+            "type": "string",
+            "nullable": true
+          },
+          "usableUntil": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Deadline to apply it, or null when none was set."
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "date"
+        ]
+      }
+    }
+  }
+}
